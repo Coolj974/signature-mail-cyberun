@@ -23,13 +23,13 @@ Générateur de signature e-mail moderne et interactif aux couleurs de Cyberun (
 | `index.html` | Générateur (formulaire + aperçu + copie) |
 | `signature-exemple.html` | Signature statique de référence |
 | `logo-cyberun.svg` | Logo officiel (vectoriel) |
-| `logo-cyberun.png` | Logo PNG HD (×3), utilisé quand le SVG n'est pas supporté |
-| `logo-cyberun-sombre.svg/.png` | Logo tout bleu, affiché en mode sombre (Apple Mail, iOS, Outlook…) |
+| `logo-cyberun.png` | Logo PNG HD (×3) bleu et noir |
+| `logo-cyberun-sombre.svg/.png` | Logo tout bleu : affiché en mode sombre (Apple Mail, iOS, Outlook…) et dans Gmail / Outlook Windows, qui ne détectent pas le mode sombre |
 | `icons/` | Icônes PNG bleues (e-mail, téléphone, mobile, adresse, horaires, lecture), utilisées à la place des symboles Unicode que Gmail convertit en emojis |
 
 ## 🖼️ Logo SVG / PNG
 
-La signature utilise `<picture>` : le **SVG** s'affiche dans Apple Mail, iOS et Outlook Mac/Web, et le **PNG HD** s'affiche automatiquement dans Gmail et Outlook Windows, qui ne supportent pas le SVG.
+La signature utilise `<picture>` : le **SVG** s'affiche dans Apple Mail, iOS et Outlook Mac/Web, et le **PNG tout bleu** s'affiche dans Gmail et Outlook Windows, qui ne supportent ni le SVG ni la détection du mode sombre (lisible sur fond clair comme sombre).
 
 ## 🎨 Personnalisation
 
