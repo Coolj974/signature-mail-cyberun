@@ -43,6 +43,8 @@
     <label>E-mail</label><input id="email" type="email" value="norman.marie-marthe@cyberun.info">
     <label>Téléphone fixe <small>(facultatif)</small></label><input id="tel" placeholder="+262 262 00 00 00">
     <label>Mobile <small>(facultatif)</small></label><input id="mobile" placeholder="+262 692 00 00 00">
+    <label>Adresse <small>(facultatif, lien Google Maps automatique)</small></label><input id="adresse" placeholder="12 rue Exemple, 97400 Saint-Denis">
+    <label>Horaires <small>(facultatif)</small></label><input id="horaires" placeholder="Lun–Ven : 8h–12h / 13h30–17h">
     <label>LinkedIn <small>(facultatif, URL complète)</small></label><input id="linkedin" placeholder="https://www.linkedin.com/in/...">
 
     <div class="actions">
@@ -63,7 +65,7 @@
       <b>Outlook Web / New Outlook</b> : Paramètres → Comptes → Signatures → coller.<br>
       <b>Outlook classique (Windows)</b> : Fichier → Options → Courrier → Signatures → coller.<br>
       <b>Apple Mail</b> : Réglages → Signatures → coller (décocher « Toujours utiliser ma police par défaut »).<br>
-      <b>Champs vides</b> : les lignes téléphone, mobile et le bouton LinkedIn disparaissent automatiquement.
+      <b>Champs vides</b> : les lignes téléphone, mobile, adresse, horaires et le bouton LinkedIn disparaissent automatiquement.
     </div>
   </section>
 </main>
@@ -87,9 +89,13 @@ const telHref = s => 'tel:' + s.replace(/[^\d+]/g, '');
 
 function contactRow(icon, href, text) {
   return `<div style="font-size:13px;line-height:20px;color:#333333;">
-      <span style="color:${CONFIG.c1};font-weight:700;display:inline-block;width:16px;">${icon}</span>&nbsp;<a href="${esc(href)}" style="color:#333333;text-decoration:none;">${esc(text)}</a>
+      <span style="color:${CONFIG.c1};font-weight:700;display:inline-block;width:16px;">${icon}</span>&nbsp;${href
+        ? `<a href="${esc(href)}" target="_blank" style="color:#333333;text-decoration:none;">${esc(text)}</a>`
+        : `<span style="color:#333333;">${esc(text)}</span>`}
     </div>`;
 }
+
+const mapsHref = s => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s);
 
 function btn(href, label, filled) {
   const s = filled
@@ -103,6 +109,9 @@ function buildSignature(d) {
   const rows = [contactRow('✉', 'mailto:' + d.email, d.email)];
   if (d.tel)    rows.push(contactRow('☎', telHref(d.tel), d.tel));
   if (d.mobile) rows.push(contactRow('✆', telHref(d.mobile), d.mobile));
+  if (d.adresse)  rows.push(contactRow('⌂', mapsHref(d.adresse), d.adresse));
+  if (d.horaires) rows.push(contactRow('◷', '', d.horaires));
+  const sepHeight = 100 + rows.length * 20;
 
   const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
   if (d.linkedin) buttons.push(btn(d.linkedin, 'in', false));
@@ -120,7 +129,7 @@ function buildSignature(d) {
       <a href="${C.site}" target="_blank" style="display:inline-block;margin-top:8px;font-size:14px;font-weight:700;color:${C.c1};text-decoration:none;letter-spacing:.3px;">${C.siteLabel}</a>
     </td>
     <td style="width:4px;padding:18px 0;">
-      <div style="width:4px;height:120px;border-radius:4px;background:${C.c1};background:linear-gradient(180deg,${C.c2} 0%,${C.c1} 100%);"></div>
+      <div style="width:4px;height:${sepHeight}px;border-radius:4px;background:${C.c1};background:linear-gradient(180deg,${C.c2} 0%,${C.c1} 100%);"></div>
     </td>
     <td valign="middle" style="padding:20px 26px 20px 24px;">
       <div style="font-size:18px;font-weight:700;color:#111111;line-height:22px;">${esc(d.prenom)} <span style="letter-spacing:.5px;">${esc(d.nom.toUpperCase())}</span></div>
@@ -135,7 +144,7 @@ function buildSignature(d) {
 </table>`;
 }
 
-const fields = ['prenom','nom','poste','email','tel','mobile','linkedin'];
+const fields = ['prenom','nom','poste','email','tel','mobile','adresse','horaires','linkedin'];
 const data = () => Object.fromEntries(fields.map(f => [f, $(f).value.trim()]));
 const render = () => { $('preview').innerHTML = buildSignature(data()); };
 fields.forEach(f => $(f).addEventListener('input', render));
