@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Générateur de signature – Cyberun</title>
+<style>
+  :root { --c1:#2581C4; --c2:#1B9CD8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Segoe UI',Arial,sans-serif; background:#f4f6f9; color:#222; }
+  header { background:linear-gradient(90deg,var(--c1),var(--c2)); color:#fff; padding:18px 32px; }
+  header h1 { margin:0; font-size:20px; font-weight:600; }
+  header p { margin:4px 0 0; font-size:13px; opacity:.9; }
+  main { display:grid; grid-template-columns:340px 1fr; gap:28px; padding:28px 32px; max-width:1200px; }
+  @media (max-width:900px){ main { grid-template-columns:1fr; } }
+  .card { background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.06); padding:22px; }
+  h2 { margin:0 0 14px; font-size:15px; color:var(--c1); text-transform:uppercase; letter-spacing:1px; }
+  label { display:block; font-size:12px; font-weight:600; color:#555; margin:12px 0 4px; }
+  label small { font-weight:400; color:#999; }
+  input { width:100%; padding:9px 11px; border:1px solid #d6dbe2; border-radius:6px; font-size:14px; font-family:inherit; }
+  input:focus { outline:none; border-color:var(--c1); box-shadow:0 0 0 3px rgba(37,129,196,.15); }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+  button { padding:10px 18px; border-radius:20px; border:1px solid var(--c1); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.2s; }
+  .primary { background:var(--c1); color:#fff; } .primary:hover { background:#1A6AA6; }
+  .ghost { background:#fff; color:var(--c1); } .ghost:hover { background:var(--c1); color:#fff; }
+  #toast { margin-top:12px; font-size:13px; color:#1a8a4a; min-height:18px; }
+  #preview { padding:24px; background:#f4f6f9; border-radius:8px; overflow:auto; }
+  .help { font-size:13px; line-height:1.6; color:#555; } .help b { color:#222; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Générateur de signature e-mail – Cyberun</h1>
+  <p>Remplissez vos informations, vérifiez l'aperçu, puis copiez la signature dans votre messagerie.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Vos informations</h2>
+    <label>Prénom</label><input id="prenom" value="Norman">
+    <label>Nom</label><input id="nom" value="MARIE-MARTHE">
+    <label>Poste</label><input id="poste" value="Développeur Multimédia">
+    <label>E-mail</label><input id="email" type="email" value="norman.marie-marthe@cyberun.info">
+    <label>Téléphone fixe <small>(facultatif)</small></label><input id="tel" placeholder="+262 262 00 00 00">
+    <label>Mobile <small>(facultatif)</small></label><input id="mobile" placeholder="+262 692 00 00 00">
+    <label>LinkedIn <small>(facultatif, URL complète)</small></label><input id="linkedin" placeholder="https://www.linkedin.com/in/...">
+
+    <div class="actions">
+      <button class="primary" id="copy">Copier la signature</button>
+      <button class="ghost" id="download">Télécharger (.htm)</button>
+    </div>
+    <div id="toast"></div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>Aperçu</h2>
+      <div id="preview"></div>
+    </div>
+    <div class="card help" style="margin-top:20px;">
+      <h2>Installation</h2>
+      <b>Gmail</b> : Paramètres → Voir tous les paramètres → Signature → Créer → coller (Ctrl+V).<br>
+      <b>Outlook Web / New Outlook</b> : Paramètres → Comptes → Signatures → coller.<br>
+      <b>Outlook classique (Windows)</b> : Fichier → Options → Courrier → Signatures → coller.<br>
+      <b>Apple Mail</b> : Réglages → Signatures → coller (décocher « Toujours utiliser ma police par défaut »).<br>
+      <b>Champs vides</b> : les lignes téléphone, mobile et le bouton LinkedIn disparaissent automatiquement.
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===== CONFIGURATION (administrateur) =====
+   Remplacez par les URL publiques des logos hébergés (ex. https://cyberun.info/signature/...).
+   Les chemins relatifs ne fonctionnent que pour l'aperçu local. */
+const CONFIG = {
+  logoSvg: 'https://coolj974.github.io/signature-mail-cyberun/logo-cyberun.svg',
+  logoPng: 'https://coolj974.github.io/signature-mail-cyberun/logo-cyberun.png',
+  site: 'https://cyberun.info',
+  siteLabel: 'cyberun.info',
+  c1: '#2581C4',
+  c2: '#1B9CD8'
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const telHref = s => 'tel:' + s.replace(/[^\d+]/g, '');
+
+function contactRow(icon, href, text) {
+  return `<div style="font-size:13px;line-height:20px;color:#333333;">
+      <span style="color:${CONFIG.c1};font-weight:700;display:inline-block;width:16px;">${icon}</span>&nbsp;<a href="${esc(href)}" style="color:#333333;text-decoration:none;">${esc(text)}</a>
+    </div>`;
+}
+
+function btn(href, label, filled) {
+  const s = filled
+    ? `background:${CONFIG.c1};color:#ffffff;padding:8px 14px;`
+    : `background:#ffffff;color:${CONFIG.c1};padding:7px 13px;border:1px solid ${CONFIG.c1};`;
+  return `<td style="padding-right:8px;"><a href="${esc(href)}" target="_blank" style="display:inline-block;${s}font-size:12px;font-weight:700;text-decoration:none;border-radius:20px;white-space:nowrap;">${label}</a></td>`;
+}
+
+function buildSignature(d) {
+  const C = CONFIG;
+  const rows = [contactRow('✉', 'mailto:' + d.email, d.email)];
+  if (d.tel)    rows.push(contactRow('☎', telHref(d.tel), d.tel));
+  if (d.mobile) rows.push(contactRow('✆', telHref(d.mobile), d.mobile));
+
+  const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
+  if (d.linkedin) buttons.push(btn(d.linkedin, 'in', false));
+  buttons.push(btn(C.site, '▶&nbsp;Découvrir Cyberun', false));
+
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:600px;max-width:100%;background:#ffffff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:'Segoe UI',Arial,Helvetica,sans-serif;border-collapse:separate;overflow:hidden;">
+  <tr>
+    <td valign="middle" align="center" style="padding:22px 22px 18px 26px;width:230px;">
+      <a href="${C.site}" target="_blank" style="text-decoration:none;">
+        <picture>
+          <source srcset="${C.logoSvg}" type="image/svg+xml">
+          <img src="${C.logoPng}" width="210" height="68" alt="Cyberun – Innovation &amp; Tradition" style="display:block;width:210px;height:auto;border:0;">
+        </picture>
+      </a>
+      <a href="${C.site}" target="_blank" style="display:inline-block;margin-top:8px;font-size:14px;font-weight:700;color:${C.c1};text-decoration:none;letter-spacing:.3px;">${C.siteLabel}</a>
+    </td>
+    <td style="width:4px;padding:18px 0;">
+      <div style="width:4px;height:120px;border-radius:4px;background:${C.c1};background:linear-gradient(180deg,${C.c2} 0%,${C.c1} 100%);"></div>
+    </td>
+    <td valign="middle" style="padding:20px 26px 20px 24px;">
+      <div style="font-size:18px;font-weight:700;color:#111111;line-height:22px;">${esc(d.prenom)} <span style="letter-spacing:.5px;">${esc(d.nom.toUpperCase())}</span></div>
+      <div style="font-size:14px;color:${C.c1};line-height:20px;margin-top:2px;">${esc(d.poste)}</div>
+      <div style="margin-top:12px;">${rows.join('')}</div>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:14px;"><tr>${buttons.join('')}</tr></table>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3" style="background:${C.c1};background:linear-gradient(90deg,${C.c1} 0%,${C.c2} 100%);padding:7px 26px;font-size:11px;color:#ffffff;letter-spacing:1.5px;text-transform:uppercase;">Innovation &amp; Tradition</td>
+  </tr>
+</table>`;
+}
+
+const fields = ['prenom','nom','poste','email','tel','mobile','linkedin'];
+const data = () => Object.fromEntries(fields.map(f => [f, $(f).value.trim()]));
+const render = () => { $('preview').innerHTML = buildSignature(data()); };
+fields.forEach(f => $(f).addEventListener('input', render));
+
+// Pré-remplissage possible via l'URL : generateur-signature.html?prenom=Jean&nom=Dupont&poste=...
+new URLSearchParams(location.search).forEach((v, k) => { if (fields.includes(k)) $(k).value = v; });
+render();
+
+function toast(msg) { $('toast').textContent = msg; setTimeout(() => $('toast').textContent = '', 3500); }
+
+$('copy').addEventListener('click', async () => {
+  const html = buildSignature(data());
+  try {
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html], {type:'text/html'}),
+      'text/plain': new Blob([$('preview').innerText], {type:'text/plain'})
+    })]);
+  } catch {
+    const r = document.createRange(); r.selectNodeContents($('preview'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges();
+  }
+  toast('✔ Signature copiée – collez-la dans votre messagerie (Ctrl+V).');
+});
+
+$('download').addEventListener('click', () => {
+  const d = data();
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${buildSignature(d)}</body></html>`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([doc], {type:'text/html'}));
+  a.download = `signature-${(d.prenom + '-' + d.nom).toLowerCase().replace(/[^a-z0-9]+/g,'-')}.htm`;
+  a.click();
+});
+</script>
+</body>
+</html>
