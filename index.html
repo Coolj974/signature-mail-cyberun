@@ -89,11 +89,12 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const telHref = s => 'tel:' + s.replace(/[^\d+]/g, '');
 
 function contactRow(icon, href, text) {
-  return `<div style="font-size:13px;line-height:20px;color:#333333;">
-      <img src="${CONFIG.icons}/${icon}.png" width="14" height="14" alt="" style="width:14px;height:14px;border:0;vertical-align:-2px;">&nbsp;&nbsp;${href
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>
+      <td valign="top" style="width:22px;padding:3px 0 0 0;"><img src="${CONFIG.icons}/${icon}.png" width="14" height="14" alt="" style="display:block;width:14px;height:14px;border:0;"></td>
+      <td valign="top" style="font-size:13px;line-height:20px;color:#333333;font-family:'Segoe UI',Arial,Helvetica,sans-serif;">${href
         ? `<a href="${esc(href)}" target="_blank" style="color:#333333;text-decoration:none;">${esc(text)}</a>`
-        : `<span style="color:#333333;">${esc(text)}</span>`}
-    </div>`;
+        : `<span style="color:#333333;">${esc(text)}</span>`}</td>
+    </tr></table>`;
 }
 
 const mapsHref = s => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s);
@@ -112,7 +113,8 @@ function buildSignature(d) {
   if (d.mobile) rows.push(contactRow('mobile', telHref(d.mobile), d.mobile));
   if (d.adresse)  rows.push(contactRow('pin', mapsHref(d.adresse), d.adresse));
   if (d.horaires) rows.push(contactRow('clock', '', d.horaires));
-  const sepHeight = 100 + rows.length * 20;
+  const lines = [d.email, d.tel, d.mobile, d.adresse, d.horaires].filter(Boolean).reduce((n, t) => n + Math.ceil(t.length / 40), 0);
+  const sepHeight = 100 + lines * 20;
 
   const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
   if (d.linkedin) buttons.push(btn(d.linkedin, 'in', false));
