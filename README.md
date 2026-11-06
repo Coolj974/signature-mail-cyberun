@@ -7,7 +7,7 @@ Générateur de signature e-mail moderne et interactif aux couleurs de Cyberun (
 ## 🚀 Utilisation (employés)
 
 1. Ouvrir le générateur : **https://coolj974.github.io/signature-mail-cyberun/**
-2. Remplir prénom, nom, poste, e-mail et, si besoin, téléphone fixe, mobile, adresse (lien Google Maps automatique), horaires et LinkedIn. Les champs vides n'apparaissent pas dans la signature.
+2. Remplir prénom, nom, poste, e-mail et, si besoin, téléphone fixe, mobile, adresse sur 2 lignes (lieu, puis rue et ville – lien Google Maps automatique), horaires (une ligne par période, ex. `Vendredi  8h–13h`) et LinkedIn. Les champs vides n'apparaissent pas dans la signature.
 3. Cliquer sur **Copier la signature**, puis la coller dans la messagerie :
    - **Gmail** : Paramètres → Voir tous les paramètres → Signature → Créer → Ctrl+V
    - **Outlook Web / nouvel Outlook** : Paramètres → Comptes → Signatures → Ctrl+V

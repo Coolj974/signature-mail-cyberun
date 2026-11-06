@@ -17,8 +17,8 @@
   h2 { margin:0 0 14px; font-size:15px; color:var(--c1); text-transform:uppercase; letter-spacing:1px; }
   label { display:block; font-size:12px; font-weight:600; color:#555; margin:12px 0 4px; }
   label small { font-weight:400; color:#999; }
-  input { width:100%; padding:9px 11px; border:1px solid #d6dbe2; border-radius:6px; font-size:14px; font-family:inherit; }
-  input:focus { outline:none; border-color:var(--c1); box-shadow:0 0 0 3px rgba(37,129,196,.15); }
+  input, textarea { width:100%; resize:vertical; padding:9px 11px; border:1px solid #d6dbe2; border-radius:6px; font-size:14px; font-family:inherit; }
+  input:focus, textarea:focus { outline:none; border-color:var(--c1); box-shadow:0 0 0 3px rgba(37,129,196,.15); }
   .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
   button { padding:10px 18px; border-radius:20px; border:1px solid var(--c1); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.2s; }
   .primary { background:var(--c1); color:#fff; } .primary:hover { background:#1A6AA6; }
@@ -43,8 +43,8 @@
     <label>E-mail</label><input id="email" type="email" value="norman.marie-marthe@cyberun.info">
     <label>Téléphone fixe <small>(facultatif)</small></label><input id="tel" placeholder="+262 262 00 00 00">
     <label>Mobile <small>(facultatif)</small></label><input id="mobile" placeholder="+262 692 00 00 00">
-    <label>Adresse <small>(facultatif, lien Google Maps automatique)</small></label><input id="adresse" placeholder="12 rue Exemple, 97400 Saint-Denis">
-    <label>Horaires <small>(facultatif)</small></label><input id="horaires" value="Lun–Jeu 8h–12h / 13h–16h30 · Ven 8h–13h" placeholder="Lun–Jeu 8h–12h / 13h–16h30 · Ven 8h–13h">
+    <label>Adresse <small>(facultatif – 1re ligne : lieu, 2e ligne : rue et ville)</small></label><textarea id="adresse" rows="2" placeholder="Maison des Associations&#10;60 chemin Desbassyns, 97426 Trois-Bassins"></textarea>
+    <label>Horaires <small>(facultatif – une ligne par période)</small></label><textarea id="horaires" rows="2">Lun – Jeu  8h–12h · 13h–16h30&#10;Vendredi  8h–13h</textarea>
     <label>LinkedIn <small>(facultatif, URL complète)</small></label><input id="linkedin" placeholder="https://www.linkedin.com/in/...">
 
     <div class="actions">
@@ -88,13 +88,42 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const telHref = s => 'tel:' + s.replace(/[^\d+]/g, '');
 
+function iconCell(icon, top) {
+  return `<td valign="top" style="width:22px;padding:${top}px 0 0 0;"><img src="${CONFIG.icons}/${icon}.png" width="14" height="14" alt="" style="display:block;width:14px;height:14px;border:0;"></td>`;
+}
+
 function contactRow(icon, href, text) {
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>
-      <td valign="top" style="width:22px;padding:3px 0 0 0;"><img src="${CONFIG.icons}/${icon}.png" width="14" height="14" alt="" style="display:block;width:14px;height:14px;border:0;"></td>
-      <td valign="top" style="font-size:13px;line-height:20px;color:#333333;font-family:'Segoe UI',Arial,Helvetica,sans-serif;">${href
-        ? `<a href="${esc(href)}" target="_blank" style="color:#333333;text-decoration:none;">${esc(text)}</a>`
-        : `<span style="color:#333333;">${esc(text)}</span>`}</td>
+      ${iconCell(icon, 3)}
+      <td valign="top" style="padding-bottom:2px;font-size:13px;line-height:20px;color:#333333;font-family:'Segoe UI',Arial,Helvetica,sans-serif;"><a href="${esc(href)}" target="_blank" style="color:#333333;text-decoration:none;">${esc(text)}</a></td>
     </tr></table>`;
+}
+
+// Ligne secondaire (adresse, horaires) : plus petite et grise, contenu HTML déjà échappé.
+function infoRow(icon, html) {
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>
+      ${iconCell(icon, 2)}
+      <td valign="top" style="padding-bottom:5px;font-size:12px;line-height:17px;color:#6B7280;font-family:'Segoe UI',Arial,Helvetica,sans-serif;">${html}</td>
+    </tr></table>`;
+}
+
+const splitLines = s => s.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+function addressHtml(text) {
+  const [first, ...rest] = splitLines(text);
+  const href = mapsHref(splitLines(text).join(', '));
+  return `<a href="${esc(href)}" target="_blank" style="color:#6B7280;text-decoration:none;"><span style="color:#333333;font-weight:600;">${esc(first)}</span>${rest.map(l => '<br>' + esc(l)).join('')}</a>`;
+}
+
+function hoursHtml(text) {
+  const td = 'font-size:12px;line-height:17px;font-family:\'Segoe UI\',Arial,Helvetica,sans-serif;';
+  const rows = splitLines(text).map(l => {
+    const m = l.match(/^(.*?[^\d\s])\s*:?\s+(\d.*)$/);
+    return m
+      ? `<tr><td style="${td}padding-right:10px;color:${CONFIG.c1};font-weight:600;white-space:nowrap;">${esc(m[1])}</td><td style="${td}color:#6B7280;">${esc(m[2])}</td></tr>`
+      : `<tr><td colspan="2" style="${td}color:#6B7280;">${esc(l)}</td></tr>`;
+  }).join('');
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">${rows}</table>`;
 }
 
 const mapsHref = s => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s);
@@ -111,10 +140,14 @@ function buildSignature(d) {
   const rows = [contactRow('mail', 'mailto:' + d.email, d.email)];
   if (d.tel)    rows.push(contactRow('phone', telHref(d.tel), d.tel));
   if (d.mobile) rows.push(contactRow('mobile', telHref(d.mobile), d.mobile));
-  if (d.adresse)  rows.push(contactRow('pin', mapsHref(d.adresse), d.adresse));
-  if (d.horaires) rows.push(contactRow('clock', '', d.horaires));
-  const lines = [d.email, d.tel, d.mobile, d.adresse, d.horaires].filter(Boolean).reduce((n, t) => n + Math.ceil(t.length / 40), 0);
-  const sepHeight = 100 + lines * 20;
+  const infos = [];
+  if (d.adresse)  infos.push(infoRow('pin', addressHtml(d.adresse)));
+  if (d.horaires) infos.push(infoRow('clock', hoursHtml(d.horaires)));
+  const infoLines = splitLines(d.adresse).length + splitLines(d.horaires).length;
+  const sepHeight = 100 + rows.length * 22 + (infos.length ? 14 + infoLines * 17 + infos.length * 5 : 0);
+  const infoBlock = infos.length
+    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #E8ECF1;">${infos.join('')}</div>`
+    : '';
 
   const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
   if (d.linkedin) buttons.push(btn(d.linkedin, 'in', false));
@@ -139,7 +172,7 @@ function buildSignature(d) {
     <td valign="middle" style="padding:20px 26px 20px 24px;">
       <div style="font-size:18px;font-weight:700;color:#111111;line-height:22px;">${esc(d.prenom)} <span style="letter-spacing:.5px;">${esc(d.nom.toUpperCase())}</span></div>
       <div style="font-size:14px;color:${C.c1};line-height:20px;margin-top:2px;">${esc(d.poste)}</div>
-      <div style="margin-top:12px;">${rows.join('')}</div>
+      <div style="margin-top:12px;">${rows.join('')}${infoBlock}</div>
       <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:14px;"><tr>${buttons.join('')}</tr></table>
     </td>
   </tr>
