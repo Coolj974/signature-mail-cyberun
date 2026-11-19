@@ -55,7 +55,7 @@
     <label>E-mail</label><input id="email" type="email" value="norman.marie-marthe@cyberun.info">
     <label>Téléphone fixe <small>(facultatif)</small></label><input id="tel" placeholder="+262 262 00 00 00">
     <label>Mobile <small>(facultatif)</small></label><input id="mobile" placeholder="+262 692 00 00 00">
-    <label>Adresse <small>(facultatif – 1re ligne : lieu, 2e ligne : rue et ville)</small></label><textarea id="adresse" rows="2" placeholder="Maison des Associations&#10;60 chemin Desbassyns, 97426 Trois-Bassins"></textarea>
+    <label>Adresse <small>(facultatif – 1re ligne : lieu, 2e ligne : rue et ville ; laissez une ligne vide pour ajouter une 2e adresse)</small></label><textarea id="adresse" rows="3" placeholder="Maison des Associations&#10;60 chemin Desbassyns, 97426 Trois-Bassins"></textarea>
     <label>Horaires <small>(facultatif – une ligne par période)</small></label><textarea id="horaires" rows="2">Lun – Jeu  8h–12h · 13h–16h30&#10;Vendredi  8h–13h</textarea>
     <label>LinkedIn <small>(facultatif, URL complète)</small></label><input id="linkedin" placeholder="https://www.linkedin.com/in/...">
 
@@ -155,7 +155,7 @@ function buildSignature(d) {
   if (d.tel)    rows.push(contactRow('phone', telHref(d.tel), d.tel));
   if (d.mobile) rows.push(contactRow('mobile', telHref(d.mobile), d.mobile));
   const infos = [];
-  if (d.adresse)  infos.push(infoRow('pin', addressHtml(d.adresse)));
+  if (d.adresse)  d.adresse.split(/\r?\n\s*\r?\n/).filter(b => b.trim()).forEach(b => infos.push(infoRow('pin', addressHtml(b))));
   if (d.horaires) infos.push(infoRow('clock', hoursHtml(d.horaires)));
   const infoLines = splitLines(d.adresse).length + splitLines(d.horaires).length;
   const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
