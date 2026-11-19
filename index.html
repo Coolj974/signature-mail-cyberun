@@ -24,7 +24,7 @@
   .primary { background:var(--c1); color:#fff; } .primary:hover { background:#1A6AA6; }
   .ghost { background:#fff; color:var(--c1); } .ghost:hover { background:var(--c1); color:#fff; }
   #toast { margin-top:12px; font-size:13px; color:#1a8a4a; min-height:18px; }
-  #preview { padding:24px; background:#f4f6f9; border-radius:8px; overflow:auto; }
+  #preview { padding:16px; background:#f4f6f9; border-radius:8px; overflow:auto; }
   .help { font-size:13px; line-height:1.6; color:#555; } .help b { color:#222; }
 </style>
 </head>
@@ -97,7 +97,7 @@ function iconCell(icon, top) {
 function contactRow(icon, href, text) {
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>
       ${iconCell(icon, 3)}
-      <td valign="top" style="padding-bottom:2px;font-size:13px;line-height:20px;color:#333333;font-family:'Segoe UI',Arial,Helvetica,sans-serif;"><a href="${esc(href)}" target="_blank" style="color:#333333;text-decoration:none;">${esc(text)}</a></td>
+      <td valign="top" style="padding-bottom:2px;font-size:13px;line-height:20px;color:#333333;white-space:nowrap;font-family:'Segoe UI',Arial,Helvetica,sans-serif;"><a href="${esc(href)}" target="_blank" style="color:#333333;text-decoration:none;">${esc(text)}</a></td>
     </tr></table>`;
 }
 
@@ -114,7 +114,7 @@ const splitLines = s => s.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 function addressHtml(text) {
   const [first, ...rest] = splitLines(text);
   const href = mapsHref(splitLines(text).join(', '));
-  return `<a href="${esc(href)}" target="_blank" style="color:#6B7280;text-decoration:none;"><span style="color:#333333;font-weight:600;">${esc(first)}</span>${rest.map(l => '<br>' + esc(l)).join('')}</a>`;
+  return `<a href="${esc(href)}" target="_blank" style="color:#6B7280;text-decoration:none;white-space:nowrap;"><span style="color:#333333;font-weight:600;">${esc(first)}</span>${rest.map(l => '<br>' + esc(l)).join('')}</a>`;
 }
 
 function hoursHtml(text) {
@@ -122,7 +122,7 @@ function hoursHtml(text) {
   const rows = splitLines(text).map(l => {
     const m = l.match(/^(.*?[^\d\s])\s*:?\s+(\d.*)$/);
     return m
-      ? `<tr><td style="${td}padding-right:10px;color:${CONFIG.c1};font-weight:600;white-space:nowrap;">${esc(m[1])}</td><td style="${td}color:#6B7280;">${esc(m[2])}</td></tr>`
+      ? `<tr><td style="${td}padding-right:10px;color:${CONFIG.c1};font-weight:600;white-space:nowrap;">${esc(m[1])}</td><td style="${td}color:#6B7280;white-space:nowrap;">${esc(m[2])}</td></tr>`
       : `<tr><td colspan="2" style="${td}color:#6B7280;">${esc(l)}</td></tr>`;
   }).join('');
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">${rows}</table>`;
@@ -149,8 +149,8 @@ function buildSignature(d) {
   const sepHeight = 100 + Math.max(rows.length * 22, infos.length ? 14 + infoLines * 17 + infos.length * 5 : 0);
   const detailBlock = infos.length
     ? `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-top:12px;border-collapse:collapse;"><tr>
-        <td valign="top" style="width:50%;padding-right:12px;">${rows.join('')}</td>
-        <td valign="top" style="width:50%;padding-left:12px;border-left:1px solid #E8ECF1;">${infos.join('')}</td>
+        <td valign="top" style="padding-right:14px;">${rows.join('')}</td>
+        <td valign="top" style="padding-left:14px;border-left:1px solid #E8ECF1;">${infos.join('')}</td>
       </tr></table>`
     : `<div style="margin-top:12px;">${rows.join('')}</div>`;
 
@@ -160,15 +160,15 @@ function buildSignature(d) {
 
   // Gmail/Outlook ignorent box-shadow : l'ombre est simulée par des bordures grises dégradées.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-radius:15px;border-right:2px solid #EEF0F4;border-bottom:3px solid #EEF0F4;"><tr><td style="padding:0;border-radius:14px;border-right:2px solid #E0E5EB;border-bottom:3px solid #E0E5EB;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-radius:12px;border:1px solid #DCE2EA;border-bottom-color:#C5CED9;border-right-color:#CFD6E0;"><tr><td style="padding:0;border-radius:11px;">
-<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:700px;max-width:100%;background:#ffffff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:'Segoe UI',Arial,Helvetica,sans-serif;border-collapse:separate;overflow:hidden;">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:760px;max-width:100%;background:#ffffff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:'Segoe UI',Arial,Helvetica,sans-serif;border-collapse:separate;overflow:hidden;">
   <tr>
-    <td valign="middle" align="center" style="padding:22px 22px 18px 26px;width:230px;">
+    <td valign="middle" align="center" style="padding:20px 18px 16px 22px;width:190px;">
       <a href="${C.site}" target="_blank" style="text-decoration:none;">
         <picture>
           <source srcset="${C.logoSvgDark}" type="image/svg+xml" media="(prefers-color-scheme: dark)">
           <source srcset="${C.logoPngDark}" media="(prefers-color-scheme: dark)">
           <source srcset="${C.logoSvg}" type="image/svg+xml">
-          <img src="${C.logoPngDark}" width="210" height="68" alt="Cyberun – Innovation &amp; Tradition" style="display:block;width:210px;height:auto;border:0;">
+          <img src="${C.logoPngDark}" width="180" height="58" alt="Cyberun – Innovation &amp; Tradition" style="display:block;width:180px;height:auto;border:0;">
         </picture>
       </a>
       <a href="${C.site}" target="_blank" style="display:inline-block;margin-top:8px;font-size:14px;font-weight:700;color:${C.c1};text-decoration:none;letter-spacing:.3px;">${C.siteLabel}</a>
