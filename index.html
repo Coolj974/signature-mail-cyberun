@@ -91,7 +91,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const telHref = s => 'tel:' + s.replace(/[^\d+]/g, '');
 
 function iconCell(icon, top) {
-  return `<td valign="top" style="width:22px;padding:${top}px 0 0 0;"><img src="${CONFIG.icons}/${icon}.png" width="14" height="14" alt="" style="display:block;width:14px;height:14px;border:0;"></td>`;
+  return `<td valign="top" style="width:14px;padding:${top}px 8px 0 0;"><img src="${CONFIG.icons}/${icon}.png" width="14" height="14" alt="" style="display:block;width:14px;height:14px;border:0;"></td>`;
 }
 
 function contactRow(icon, href, text) {
@@ -146,17 +146,19 @@ function buildSignature(d) {
   if (d.adresse)  infos.push(infoRow('pin', addressHtml(d.adresse)));
   if (d.horaires) infos.push(infoRow('clock', hoursHtml(d.horaires)));
   const infoLines = splitLines(d.adresse).length + splitLines(d.horaires).length;
-  const sepHeight = 100 + Math.max(rows.length * 22, infos.length ? 14 + infoLines * 17 + infos.length * 5 : 0);
-  const detailBlock = infos.length
-    ? `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-top:12px;border-collapse:collapse;"><tr>
-        <td valign="top" style="padding-right:14px;">${rows.join('')}</td>
-        <td valign="top" style="padding-left:14px;border-left:1px solid #E8ECF1;">${infos.join('')}</td>
-      </tr></table>`
-    : `<div style="margin-top:12px;">${rows.join('')}</div>`;
-
   const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
   if (d.linkedin) buttons.push(btn(d.linkedin, 'in', false));
   buttons.push(btn(C.site, `<img src="${C.icons}/play.png" width="12" height="12" alt="" style="width:12px;height:12px;border:0;vertical-align:-1px;">&nbsp;Découvrir Cyberun`, false));
+  const buttonsTable = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:12px;"><tr>${buttons.join('')}</tr></table>`;
+
+  // Boutons sous les contacts (colonne gauche) pour ne pas laisser de vide face à l'adresse/horaires.
+  const sepHeight = 52 + Math.max(rows.length * 22 + 46, infos.length ? 14 + infoLines * 17 + infos.length * 5 : 0);
+  const detailBlock = infos.length
+    ? `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-top:12px;border-collapse:collapse;"><tr>
+        <td valign="top" style="padding-right:18px;">${rows.join('')}${buttonsTable}</td>
+        <td valign="top" style="padding-left:18px;border-left:1px solid #E8ECF1;">${infos.join('')}</td>
+      </tr></table>`
+    : `<div style="margin-top:12px;">${rows.join('')}${buttonsTable}</div>`;
 
   // Gmail/Outlook ignorent box-shadow : l'ombre est simulée par des bordures grises dégradées.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-radius:15px;border-right:2px solid #EEF0F4;border-bottom:3px solid #EEF0F4;"><tr><td style="padding:0;border-radius:14px;border-right:2px solid #E0E5EB;border-bottom:3px solid #E0E5EB;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-radius:12px;border:1px solid #DCE2EA;border-bottom-color:#C5CED9;border-right-color:#CFD6E0;"><tr><td style="padding:0;border-radius:11px;">
@@ -180,7 +182,6 @@ function buildSignature(d) {
       <div style="font-size:18px;font-weight:700;color:#111111;line-height:22px;">${esc(d.prenom)} <span style="letter-spacing:.5px;">${esc(d.nom.toUpperCase())}</span></div>
       <div style="font-size:14px;color:${C.c1};line-height:20px;margin-top:2px;">${esc(d.poste)}</div>
       ${detailBlock}
-      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:14px;"><tr>${buttons.join('')}</tr></table>
     </td>
   </tr>
   <tr>
