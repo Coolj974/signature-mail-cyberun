@@ -146,10 +146,13 @@ function buildSignature(d) {
   if (d.adresse)  infos.push(infoRow('pin', addressHtml(d.adresse)));
   if (d.horaires) infos.push(infoRow('clock', hoursHtml(d.horaires)));
   const infoLines = splitLines(d.adresse).length + splitLines(d.horaires).length;
-  const sepHeight = 100 + rows.length * 22 + (infos.length ? 14 + infoLines * 17 + infos.length * 5 : 0);
-  const infoBlock = infos.length
-    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #E8ECF1;">${infos.join('')}</div>`
-    : '';
+  const sepHeight = 100 + Math.max(rows.length * 22, infos.length ? 14 + infoLines * 17 + infos.length * 5 : 0);
+  const detailBlock = infos.length
+    ? `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;margin-top:12px;border-collapse:collapse;"><tr>
+        <td valign="top" style="width:50%;padding-right:12px;">${rows.join('')}</td>
+        <td valign="top" style="width:50%;padding-left:12px;border-left:1px solid #E8ECF1;">${infos.join('')}</td>
+      </tr></table>`
+    : `<div style="margin-top:12px;">${rows.join('')}</div>`;
 
   const buttons = [btn('mailto:' + d.email, "M'écrire", true)];
   if (d.linkedin) buttons.push(btn(d.linkedin, 'in', false));
@@ -157,7 +160,7 @@ function buildSignature(d) {
 
   // Gmail/Outlook ignorent box-shadow : l'ombre est simulée par des bordures grises dégradées.
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-radius:15px;border-right:2px solid #EEF0F4;border-bottom:3px solid #EEF0F4;"><tr><td style="padding:0;border-radius:14px;border-right:2px solid #E0E5EB;border-bottom:3px solid #E0E5EB;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-radius:12px;border:1px solid #DCE2EA;border-bottom-color:#C5CED9;border-right-color:#CFD6E0;"><tr><td style="padding:0;border-radius:11px;">
-<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:600px;max-width:100%;background:#ffffff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:'Segoe UI',Arial,Helvetica,sans-serif;border-collapse:separate;overflow:hidden;">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:700px;max-width:100%;background:#ffffff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:'Segoe UI',Arial,Helvetica,sans-serif;border-collapse:separate;overflow:hidden;">
   <tr>
     <td valign="middle" align="center" style="padding:22px 22px 18px 26px;width:230px;">
       <a href="${C.site}" target="_blank" style="text-decoration:none;">
@@ -176,7 +179,7 @@ function buildSignature(d) {
     <td valign="middle" style="padding:20px 26px 20px 24px;">
       <div style="font-size:18px;font-weight:700;color:#111111;line-height:22px;">${esc(d.prenom)} <span style="letter-spacing:.5px;">${esc(d.nom.toUpperCase())}</span></div>
       <div style="font-size:14px;color:${C.c1};line-height:20px;margin-top:2px;">${esc(d.poste)}</div>
-      <div style="margin-top:12px;">${rows.join('')}${infoBlock}</div>
+      ${detailBlock}
       <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:14px;"><tr>${buttons.join('')}</tr></table>
     </td>
   </tr>
