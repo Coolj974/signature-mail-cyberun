@@ -16,6 +16,8 @@ Générateur de signature e-mail moderne et interactif aux couleurs de Cyberun (
 
 💡 Lien pré-rempli : `https://coolj974.github.io/signature-mail-cyberun/?prenom=Jean&nom=Dupont&poste=Commercial&email=jean.dupont@cyberun.info`
 
+👥 **Plusieurs signatures** : la zone **Profils** enregistre automatiquement chaque signature dans le navigateur (`localStorage`). Utilisez **+ Nouveau** pour une autre personne (adresse et horaires conservés) et la liste déroulante pour recharger un profil en un clic. Les profils restent disponibles après chaque mise à jour du générateur, mais sont propres au navigateur utilisé.
+
 ## 📁 Contenu
 
 | Fichier | Rôle |

@@ -25,6 +25,11 @@
   .ghost { background:#fff; color:var(--c1); } .ghost:hover { background:var(--c1); color:#fff; }
   #toast { margin-top:12px; font-size:13px; color:#1a8a4a; min-height:18px; }
   #preview { padding:16px; background:#f4f6f9; border-radius:8px; overflow:auto; }
+  .profiles { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .profiles select { flex:1 1 100%; min-width:0; padding:8px 10px; border:1px solid #d6dbe2; border-radius:6px; font-size:14px; font-family:inherit; background:#fff; }
+  .profiles button { padding:7px 12px; font-size:12px; }
+  .profiles button:disabled { opacity:.4; cursor:default; background:#fff; color:var(--c1); }
+  .hint { font-size:11px; color:#999; margin-top:8px; padding-bottom:14px; border-bottom:1px solid #eef0f4; }
   .help { font-size:13px; line-height:1.6; color:#555; } .help b { color:#222; }
 </style>
 </head>
@@ -36,7 +41,14 @@
 
 <main>
   <section class="card">
-    <h2>Vos informations</h2>
+    <h2>Profils</h2>
+    <div class="profiles">
+      <select id="profile" aria-label="Profil enregistré"></select>
+      <button class="ghost" id="newProfile" title="Créer une nouvelle signature (adresse et horaires conservés)">+ Nouveau</button>
+      <button class="ghost" id="deleteProfile" title="Supprimer ce profil">Supprimer</button>
+    </div>
+    <div class="hint">Enregistré automatiquement dans ce navigateur, conservé lors des mises à jour du générateur.</div>
+    <h2 style="margin-top:20px;">Vos informations</h2>
     <label>Prénom</label><input id="prenom" value="Norman">
     <label>Nom</label><input id="nom" value="MARIE-MARTHE">
     <label>Poste</label><input id="poste" value="Développeur Multimédia">
@@ -194,10 +206,70 @@ function buildSignature(d) {
 const fields = ['prenom','nom','poste','email','tel','mobile','adresse','horaires','linkedin'];
 const data = () => Object.fromEntries(fields.map(f => [f, $(f).value.trim()]));
 const render = () => { $('preview').innerHTML = buildSignature(data()); };
-fields.forEach(f => $(f).addEventListener('input', render));
 
-// Pré-remplissage possible via l'URL : generateur-signature.html?prenom=Jean&nom=Dupont&poste=...
-new URLSearchParams(location.search).forEach((v, k) => { if (fields.includes(k)) $(k).value = v; });
+/* ===== Profils enregistrés (localStorage) ===== */
+const STORE = 'cyberun-signature-profiles';
+const SHARED = ['adresse', 'horaires'];
+let store = { current: null, profiles: [] };
+try { store = Object.assign(store, JSON.parse(localStorage.getItem(STORE)) || {}); } catch {}
+const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(store)); } catch {} };
+const currentProfile = () => store.profiles.find(p => p.id === store.current);
+const profileLabel = p => `${p.prenom || ''} ${(p.nom || '').toUpperCase()}`.trim() || 'Profil sans nom';
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fill = p => fields.forEach(f => { $(f).value = p[f] || ''; });
+
+function renderProfiles() {
+  const sel = $('profile');
+  sel.innerHTML = store.profiles.length
+    ? store.profiles.map(p => `<option value="${esc(p.id)}">${esc(profileLabel(p))}${p.poste ? ' – ' + esc(p.poste) : ''}</option>`).join('')
+    : '<option value="">Aucun profil enregistré</option>';
+  sel.value = store.current || '';
+  sel.disabled = !store.profiles.length;
+  $('deleteProfile').disabled = !store.profiles.length;
+}
+
+function saveCurrent() {
+  let p = currentProfile();
+  if (!p) { p = { id: newId() }; store.profiles.push(p); store.current = p.id; }
+  Object.assign(p, data());
+  persist();
+}
+
+fields.forEach(f => $(f).addEventListener('input', () => {
+  render(); saveCurrent();
+  const opt = $('profile').selectedOptions[0];
+  if (!opt || !opt.value) renderProfiles();
+  else { const p = currentProfile(); opt.textContent = profileLabel(p) + (p.poste ? ' – ' + p.poste : ''); }
+}));
+
+$('profile').addEventListener('change', e => {
+  store.current = e.target.value; persist();
+  fill(currentProfile()); render();
+});
+
+$('newProfile').addEventListener('click', () => {
+  if (!currentProfile()) saveCurrent();
+  const p = { id: newId() };
+  fields.forEach(f => { p[f] = SHARED.includes(f) ? $(f).value.trim() : ''; });
+  store.profiles.push(p); store.current = p.id; persist();
+  fill(p); render(); renderProfiles(); $('prenom').focus();
+  toast('Nouveau profil créé : renseignez les informations de la personne.');
+});
+
+$('deleteProfile').addEventListener('click', () => {
+  const p = currentProfile();
+  if (!p || !confirm(`Supprimer le profil « ${profileLabel(p)} » ?`)) return;
+  store.profiles = store.profiles.filter(x => x !== p);
+  store.current = store.profiles.length ? store.profiles[0].id : null; persist();
+  if (currentProfile()) fill(currentProfile());
+  render(); renderProfiles();
+});
+
+// Pré-remplissage possible via l'URL : ?prenom=Jean&nom=Dupont&poste=... (prioritaire sur le profil enregistré)
+const params = [...new URLSearchParams(location.search)].filter(([k]) => fields.includes(k));
+if (params.length) { store.current = null; params.forEach(([k, v]) => { $(k).value = v; }); }
+else if (currentProfile()) fill(currentProfile());
+renderProfiles();
 render();
 
 function toast(msg) { $('toast').textContent = msg; setTimeout(() => $('toast').textContent = '', 3500); }
